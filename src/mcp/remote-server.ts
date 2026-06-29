@@ -149,11 +149,12 @@ export async function startRemoteMcpServer(
   });
 
   httpServer.listen(port, () => {
-    console.error(`[Remote MCP v0.4] Server running on http://localhost:${port}`);
-    console.error(`  SSE:   http://localhost:${port}/sse`);
-    console.error(`  POST:  http://localhost:${port}/`);
-    console.error(`  Health: http://localhost:${port}/health`);
-    console.error(`  Download: http://localhost:${port}/artifacts/:id`);
+    console.error(`[Remote MCP v0.6] Server running on http://localhost:${port}`);
+    console.error(`  Health:    http://localhost:${port}/health`);
+    console.error(`  MCP SSE:   http://localhost:${port}/sse`);
+    console.error(`  POST:      http://localhost:${port}/`);
+    console.error(`  Artifacts: http://localhost:${port}/artifacts/:artifact_id`);
     if (AUTH_TOKEN) console.error(`  Auth: Bearer token enabled`);
+    console.error(`  For ChatGPT, expose this server via HTTPS tunnel or deploy to production.`);
   });
 }
