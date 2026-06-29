@@ -6,7 +6,10 @@ import { Deck } from "../schema/deck.schema.js";
 import { LLMClient } from "./llm-client.js";
 
 export class RuleBasedLLMClient implements LLMClient {
+  readonly id = "rule-based";
   readonly name = "rule-based";
+
+  async validateConfiguration(): Promise<void> {}
 
   async generateStoryline(input: StorylineInput): Promise<Storyline> {
     return builtinGenerateStoryline(input);

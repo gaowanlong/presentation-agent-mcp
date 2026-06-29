@@ -15,6 +15,9 @@ export const IssueTypeEnum = z.enum([
   // V0.3 stricter checks
   "weak_title",
   "generic_message",
+  "duplicate_slide_content",
+  "unsupported_numeric_claim",
+  "unintended_overlap",
   "duplicate_slide_message",
   "missing_evidence_for_claim",
   "roadmap_without_timeframe",

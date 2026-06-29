@@ -19,7 +19,12 @@ function getConfig(): DeepSeekConfig {
 }
 
 export class DeepSeekLLMClient implements LLMClient {
+  readonly id = "deepseek";
   readonly name = "deepseek";
+
+  async validateConfiguration(): Promise<void> {
+    const config = getConfig();
+  }
   private fallback: RuleBasedLLMClient;
 
   constructor() { this.fallback = new RuleBasedLLMClient(); }

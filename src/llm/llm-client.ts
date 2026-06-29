@@ -13,6 +13,8 @@ export interface DeckGeneratorInput {
 }
 
 export interface LLMClient {
+  readonly id: string;
+  validateConfiguration(): Promise<void>;
   /** Display name for the provider. */
   readonly name: string;
 
