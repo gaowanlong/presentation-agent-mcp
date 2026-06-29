@@ -25,7 +25,7 @@ describe("V0.7 pipeline", () => {
     const mockMcp = { call: async (t: string, i: any) => ({ tool: t, input: i, status: "ok" }) };
     const plan = { steps: [{ step_id: "s1", tool: "create_deck", input: {}, retry: 1, fallback: "skip" as const }] };
     const results = await engine.run(plan as any, mockMcp as any);
-    expect(results[0].status).toBe("success");
-    expect(trace.getAll().length).toBe(1);
+    expect(results.nodes[0].status).toBe("success");
+    expect(trace.getGraph().nodes.length).toBe(1);
   });
 });
