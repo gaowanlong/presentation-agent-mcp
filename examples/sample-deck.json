@@ -1,0 +1,150 @@
+{
+  "deck_id": "example_deck_001",
+  "version": 1,
+  "title": "Agentic AI 时代端侧 OS 架构演进",
+  "topic": "Agentic AI 时代端侧 OS 架构演进",
+  "audience": "操作系统架构师和技术管理层",
+  "purpose": "说明端侧负载变化，并提出 AgentOS Kernel 架构演进方向",
+  "style_id": "allen_huawei_tech",
+  "slides": [
+    {
+      "slide_id": "s001",
+      "type": "title",
+      "title": "Agentic AI 时代端侧 OS 架构演进",
+      "message": "说明端侧负载变化，并提出 AgentOS Kernel 架构演进方向",
+      "subtitle": "探索下一代终端操作系统架构",
+      "author": "Presentation Agent",
+      "date": "2024-01-01",
+      "sources": []
+    },
+    {
+      "slide_id": "s002",
+      "type": "agenda",
+      "title": "议程",
+      "message": "本次汇报内容概览",
+      "items": [
+        { "label": "背景与趋势", "description": "行业背景与核心挑战" },
+        { "label": "关键洞察", "description": "技术分析与关键发现" },
+        { "label": "方案对比", "description": "传统方案 vs 新方案" },
+        { "label": "目标架构", "description": "整体架构设计" },
+        { "label": "技术路径", "description": "关键技术路径" },
+        { "label": "总结与下一步", "description": "核心结论与行动计划" }
+      ]
+    },
+    {
+      "slide_id": "s003",
+      "type": "insight",
+      "title": "背景与趋势",
+      "message": "端侧 AI 负载演进与 OS 挑战",
+      "key_points": [
+        "端侧 AI 负载正从简单推理向复杂 Agent 任务演进",
+        "传统 OS 架构面对 AI 负载存在资源碎片化问题",
+        "行业技术路线正在向 Agent-oriented 方向迁移",
+        "端侧 OS 架构演进是下一代终端的核心基础设施"
+      ],
+      "evidence": [
+        { "label": "AI 推理负载增长", "value": "60%+ CAGR", "description": "端侧 AI 推理负载年复合增长率" },
+        { "label": "内存瓶颈场景", "value": "60%+", "description": "端侧 AI 场景受限于内存瓶颈" }
+      ]
+    },
+    {
+      "slide_id": "s004",
+      "type": "insight",
+      "title": "核心挑战与机遇",
+      "message": "端侧 AI 场景下 OS 面临的核心挑战",
+      "key_points": [
+        "AI 负载对 OS 资源调度能力提出全新要求",
+        "内存和 IO 成为端侧 AI 性能瓶颈",
+        "安全隔离需求从应用级延伸到模型级",
+        "行业处于架构演进的关键窗口期"
+      ],
+      "evidence": [
+        { "label": "调度效率提升", "value": "30%+", "description": "动态调度相比静态调度的提升" },
+        { "label": "攻击面降低", "value": "50%+", "description": "统一安全框架可降低攻击面" }
+      ]
+    },
+    {
+      "slide_id": "s005",
+      "type": "comparison",
+      "title": "方案对比",
+      "message": "传统方案与新方案的关键差异",
+      "left": {
+        "title": "传统方案",
+        "points": [
+          "静态资源调度，缺乏动态适应性",
+          "内存管理粗放，利用率不足 60%",
+          "IO 路径长，延迟不可控",
+          "安全机制碎片化，缺乏统一防护"
+        ]
+      },
+      "right": {
+        "title": "新方案",
+        "points": [
+          "智能动态调度，自适应负载变化",
+          "精细化内存管理，利用率 >85%",
+          "IO 路径优化，确定性延迟",
+          "统一安全框架，端到端防护"
+        ]
+      },
+      "conclusion": "新方案在调度、内存、IO、安全四个维度全面优于传统方案"
+    },
+    {
+      "slide_id": "s006",
+      "type": "architecture",
+      "title": "目标架构",
+      "message": "AgentOS Kernel 整体架构设计",
+      "layers": [
+        {
+          "name": "应用层",
+          "description": "智能应用与 Agent 服务",
+          "components": ["推理应用", "知识管理", "多Agent协同"]
+        },
+        {
+          "name": "运行时层",
+          "description": "Agent Runtime & 资源管理",
+          "components": ["动态调度器", "内存管理器", "IO 引擎"]
+        },
+        {
+          "name": "内核层",
+          "description": "底层 OS 机制与安全",
+          "components": ["轻量级内核", "安全隔离域", "硬件抽象层"]
+        }
+      ]
+    },
+    {
+      "slide_id": "s007",
+      "type": "insight",
+      "title": "关键技术路径",
+      "message": "端侧 OS 架构演进的关键技术路径",
+      "key_points": [
+        "动态调度相比静态调度可提升资源利用率 30%+",
+        "统一安全框架能降低攻击面 50% 以上",
+        "现有架构的演进成本远低于重构成本",
+        "建议优先推进端侧 OS 架构的技术验证"
+      ],
+      "evidence": [
+        { "label": "演进成本", "value": "低", "description": "现有架构演进成本远低于重构" },
+        { "label": "技术成熟度", "value": "中高", "description": "核心技术已具备落地条件" }
+      ]
+    },
+    {
+      "slide_id": "s008",
+      "type": "summary",
+      "title": "总结与下一步",
+      "message": "核心结论与后续行动计划",
+      "takeaways": [
+        "端侧 OS 架构正面临关键的技术演进窗口",
+        "新架构在调度、内存、IO、安全方面有显著优势",
+        "建议推动 PoC 验证并规划分阶段演进路径"
+      ],
+      "next_steps": [
+        "完成技术选型评估",
+        "制定分阶段演进路线图",
+        "启动核心模块 PoC",
+        "评估开源生态与社区方案"
+      ]
+    }
+  ],
+  "created_at": "2024-01-01T00:00:00.000Z",
+  "updated_at": "2024-01-01T00:00:00.000Z"
+}

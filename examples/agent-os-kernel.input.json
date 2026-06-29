@@ -1,0 +1,8 @@
+{
+  "topic": "Agentic AI 时代端侧 OS 架构演进",
+  "audience": "操作系统架构师和技术管理层",
+  "purpose": "说明端侧负载变化，并提出 AgentOS Kernel 架构演进方向",
+  "slide_count": 8,
+  "style_id": "allen_huawei_tech",
+  "research_brief": "端侧 AI 负载正从简单推理向复杂 Agent 任务演进。传统 OS 架构面对 AI 负载存在资源碎片化问题。行业技术路线正在向 Agent-oriented 方向迁移。Agentic AI 对端侧 OS 提出了全新的调度、内存、IO 和安全需求。动态调度相比静态调度可提升资源利用率 30%+。统一安全框架能降低攻击面 50% 以上。AI 推理负载年复合增长率超过 60%。60% 以上的端侧 AI 场景受限于内存瓶颈。"
+}

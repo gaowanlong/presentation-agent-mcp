@@ -1,0 +1,39 @@
+{
+  "patch_id": "patch_mqyunsec_lvq93y",
+  "deck_id": "deck_mqyunscs_5jb1wo",
+  "description": "update_slide: 改成演进路线图，包含三个阶段",
+  "old_version": 2,
+  "new_version": 3,
+  "operations": [
+    {
+      "op": "replace_slide",
+      "slide_id": "s_mqyunscs_eledy1",
+      "slide": {
+        "slide_id": "s_mqyunscs_eledy1",
+        "type": "roadmap",
+        "title": "演进路线图",
+        "phases": [
+          {
+            "name": "技术预研",
+            "timeline": "Month 1-2",
+            "status": "completed",
+            "description": "Agentic AI 时代端侧 OS 架构演进 技术栈调研"
+          },
+          {
+            "name": "PoC 验证",
+            "timeline": "Month 3-4",
+            "status": "in_progress",
+            "description": "核心能力验证"
+          },
+          {
+            "name": "正式开发",
+            "timeline": "Month 5-8",
+            "status": "planned",
+            "description": "分阶段开发交付"
+          }
+        ]
+      }
+    }
+  ],
+  "created_at": "2026-06-29T06:41:39.204Z"
+}
