@@ -1,31 +1,50 @@
-export type AgentType = "orchestrator" | "planner" | "executor" | "reviewer" | "fixer";
-export type AgentMessageType = "plan" | "execute" | "review" | "fix" | "replan" | "done" | "error";
-export interface AgentMessage { from: AgentType; to: AgentType; type: AgentMessageType; payload: any; timestamp: number; }
+import { SemanticMessage, createMessage, AgentType } from "./semantic-message.js";
+
+export { AgentType, SemanticMessage, createMessage };
 
 export class MessageBus {
-  private queues = new Map<string, AgentMessage[]>();
-  private history: AgentMessage[] = [];
+  private queues = new Map<string, SemanticMessage[]>();
+  private history: SemanticMessage[] = [];
 
-  send(to: AgentType, msg: Omit<AgentMessage, "to" | "timestamp">) {
-    const full: AgentMessage = { ...msg, to, timestamp: Date.now() };
-    const key = to;
+  send(msg: SemanticMessage) {
+    const key = msg.to;
     if (!this.queues.has(key)) this.queues.set(key, []);
-    this.queues.get(key)!.push(full);
-    this.history.push(full);
+    this.queues.get(key)!.push(msg);
+    this.history.push(msg);
   }
 
-  receive(agent: AgentType): AgentMessage | null {
+  receive(agent: AgentType): SemanticMessage | null {
     const q = this.queues.get(agent);
     if (!q || q.length === 0) return null;
     return q.shift()!;
   }
 
-  broadcast(type: AgentMessageType, payload: any) {
-    const agents: AgentType[] = ["orchestrator", "planner", "executor", "reviewer", "fixer"];
-    for (const a of agents) this.send(a, { from: "orchestrator", type, payload });
+  route_by_intent(intent: string): SemanticMessage[] {
+    return this.history.filter(m => m.intent === intent);
   }
 
-  getHistory(): AgentMessage[] { return [...this.history]; }
+  detect_conflict(): Array<{ type: string; messages: SemanticMessage[]; description: string }> {
+    const conflicts: Array<{ type: string; messages: SemanticMessage[]; description: string }> = [];
+    const reviews = this.history.filter(m => m.intent === "evaluate_quality");
+    const plans = this.history.filter(m => m.intent === "build_slide_plan");
+    if (reviews.length > 0 && plans.length > 0) {
+      const lastReview = reviews[reviews.length - 1];
+      const lastPlan = plans[plans.length - 1];
+      if (lastReview.context.artifacts?.score < 50 && lastPlan.context.artifacts?.slides?.length > 5)
+        conflicts.push({ type: "quality_vs_complexity", messages: [lastReview, lastPlan], description: "Low score despite complex plan" });
+    }
+    return conflicts;
+  }
+
+  rewrite_message(id: string, updates: Partial<SemanticMessage>): boolean {
+    const msg = this.history.find(m => m.id === id);
+    if (!msg) return false;
+    Object.assign(msg, updates);
+    return true;
+  }
+
+  getHistory(): SemanticMessage[] { return [...this.history]; }
   pendingCount(agent: AgentType): number { return (this.queues.get(agent) || []).length; }
+  clear() { this.queues.clear(); this.history = []; }
 }
 

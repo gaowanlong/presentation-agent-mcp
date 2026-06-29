@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { MessageBus, AgentType } from "../core/message-bus.js";
+import { MessageBus, createMessage } from "../core/message-bus.js";
 import { ExecutionGraphRuntime } from "../core/execution-graph.js";
 import { GraphStateManager } from "../core/graph-state-manager.js";
 import { Replanner } from "../core/replanner.js";
@@ -7,20 +7,20 @@ import { Replanner } from "../core/replanner.js";
 describe("V0.8 Multi-Agent", () => {
   it("MessageBus should route messages between agents", () => {
     const bus = new MessageBus();
-    bus.send("executor", { from: "orchestrator", type: "execute", payload: { tool: "create_deck" } });
-    bus.send("reviewer", { from: "orchestrator", type: "review", payload: { deck: {} } });
+    bus.send(createMessage("orchestrator", "executor", "execute_tool", "Execute", { artifacts: { tool: "create_deck" } }));
+    bus.send(createMessage("orchestrator", "reviewer", "evaluate_quality", "Review", { artifacts: { deck: {} } }));
     expect(bus.pendingCount("executor")).toBe(1);
     expect(bus.pendingCount("reviewer")).toBe(1);
     const msg = bus.receive("executor");
     expect(msg).toBeTruthy();
     expect(msg!.to).toBe("executor");
-    expect(msg!.payload.tool).toBe("create_deck");
+    expect(msg!.context.artifacts.tool).toBe("create_deck");
   });
 
   it("MessageBus should maintain history", () => {
     const bus = new MessageBus();
-    bus.send("planner", { from: "orchestrator", type: "plan", payload: { text: "AI" } });
-    bus.send("fixer", { from: "orchestrator", type: "fix", payload: { patches: [] } });
+    bus.send(createMessage("orchestrator", "planner", "build_slide_plan", "Plan", { artifacts: { text: "AI" } }));
+    bus.send(createMessage("orchestrator", "fixer", "fix_issues", "Fix", { artifacts: { patches: [] } }));
     expect(bus.getHistory().length).toBe(2);
   });
 

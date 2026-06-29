@@ -1,113 +1,114 @@
-import { MessageBus } from "../../core/message-bus.js";
-import { PlannerAgent } from "../planner/planner-agent.js";
-import { ExecutorAgent } from "../executor/executor-agent.js";
-import { ReviewerAgent } from "../reviewer/reviewer-agent.js";
-import { FixerAgent } from "../fixer/fixer-agent.js";
+import { MessageBus, createMessage, SemanticMessage } from "../../core/message-bus.js";
+import { AgentType } from "../../core/semantic-message.js";
+import { ContractRegistry } from "../contracts/contract-registry.js";
+import { IntentRouter } from "../../core/intent-router.js";
+import { NegotiationEngine } from "../../core/negotiation-engine.js";
 import { ExecutionGraphRuntime } from "../../core/execution-graph.js";
 import { GraphStateManager } from "../../core/graph-state-manager.js";
-import { Replanner } from "../../core/replanner.js";
 import { StateMachine } from "../../core/state-machine.js";
-import { TraceWriter } from "../../core/trace-writer.js";
+import { Replanner } from "../../core/replanner.js";
+import { PlannerAgent } from "../planner/planner-agent.js";
+import { ReviewerAgent } from "../reviewer/reviewer-agent.js";
+import { FixerAgent } from "../fixer/fixer-agent.js";
 import type { MCPClient } from "../../mcp/mcp-client.js";
 
 export class OrchestratorAgent {
   private bus = new MessageBus();
-  private planner = new PlannerAgent(this.bus);
-  private executor: ExecutorAgent;
-  private reviewer = new ReviewerAgent(this.bus);
-  private fixer = new FixerAgent(this.bus);
+  private contracts = new ContractRegistry();
+  private router = new IntentRouter();
+  private negotiator = new NegotiationEngine();
   private graph = new ExecutionGraphRuntime();
   private stateMgr = new GraphStateManager();
   private replanner = new Replanner();
   private sm = new StateMachine();
-  private trace = new TraceWriter();
+  private planner: PlannerAgent;
+  private reviewer: ReviewerAgent;
+  private fixer: FixerAgent;
   private context: any = {};
 
-  constructor(private mcpClient: MCPClient) { this.executor = new ExecutorAgent(this.bus, mcpClient); }
+  constructor(private mcpClient: MCPClient) {
+    this.contracts.registerDefaults();
+    this.planner = new PlannerAgent(this.bus, this.contracts);
+    this.reviewer = new ReviewerAgent(this.bus, this.contracts);
+    this.fixer = new FixerAgent(this.bus, this.contracts);
+  }
 
-  async run(text: string): Promise<{ artifact: any; trace: any }> {
-    // Phase 1: Plan
+  async run(text: string): Promise<{ artifact: any }> {
     this.sm.transition("PLANNING");
-    this.bus.send("planner", { from: "orchestrator", type: "plan", payload: { text } });
-    let planMsg = this.bus.receive("orchestrator");
-    while (!planMsg || planMsg.type === "error") { await this.tick(); planMsg = this.bus.receive("orchestrator"); }
-    const { execPlan } = planMsg.payload;
-    this.graph = new ExecutionGraphRuntime(execPlan);
-    this.stateMgr.init(execPlan.steps);
+    this.bus.send(createMessage("orchestrator", "planner", "build_slide_plan", "Generate slide plan", { artifacts: { text } }));
 
-    // Phase 2: Execute + Review + Fix loop
-    let totalScore = 0;
-    let loopCount = 0;
-    const maxLoops = 5;
-
-    while (this.graph.hasPending(new Set()) && loopCount < maxLoops) {
-      loopCount++;
+    let planMsg: SemanticMessage | null = null;
+    while (!planMsg) await this.dispatchCycle();
+    planMsg = this.bus.receive("orchestrator");
+    if (!planMsg || planMsg.intent === "build_slide_plan") {
       this.sm.transition("EXECUTING");
       const completed = new Set<string>();
-      while (this.graph.hasPending(completed)) {
+      let loops = 0;
+      while (loops < 5) {
+        loops++;
+        await this.dispatchCycle();
         const ready = this.graph.getReadyNodes(completed);
-        if (ready.length === 0) break;
         for (const node of ready) {
-          this.bus.send("executor", { from: "orchestrator", type: "execute", payload: { node, context: this.context } });
-          await this.tick();
-          const execResult = this.bus.receive("orchestrator");
-          if (execResult) completed.add(node.id);
+          this.bus.send(createMessage("orchestrator", "executor", "execute_tool", "Execute " + node.tool, { artifacts: { node, context: this.context } }));
         }
-      }
-
-      // Review
-      this.sm.transition("REVIEWING");
-      if (this.context.deck_id) {
-        const { generateDeck } = await import("../../runtime/deck-generator.js");
-        // Send review request
-        this.bus.send("reviewer", { from: "orchestrator", type: "review", payload: { deck: this.context } });
-        await this.tick();
-        const reviewResult = this.bus.receive("orchestrator");
-        if (reviewResult?.payload?.score !== undefined) totalScore = reviewResult.payload.score;
-
-        // Fix if needed
-        if (totalScore < 75) {
-          this.sm.transition("FIXING");
-          this.bus.send("fixer", { from: "orchestrator", type: "fix", payload: { deck: this.context } });
-          await this.tick();
-          const fixResult = this.bus.receive("orchestrator");
-          if (fixResult?.payload) {
-            // Re-execute if fixes applied
+        await this.dispatchCycle();
+        if (this.context.deck_id) {
+          this.sm.transition("REVIEWING");
+          this.bus.send(createMessage("orchestrator", "reviewer", "evaluate_quality", "Review deck", { artifacts: { deck: this.context } }));
+          await this.dispatchCycle();
+          const reviewResult = this.bus.receive("orchestrator");
+          const score = reviewResult?.context?.artifacts?.score ?? 100;
+          if (score < 75) {
             this.sm.transition("REPLANNING");
+            this.bus.send(createMessage("orchestrator", "fixer", "fix_issues", "Fix low score", { artifacts: { deck: this.context, issues: reviewResult?.context?.artifacts?.issues } }));
+            await this.dispatchCycle();
+            const conflicts = this.bus.detect_conflict();
+            if (conflicts.length > 0) this.negotiator.resolve(conflicts, this.bus.getHistory());
             continue;
           }
         }
+        break;
+      }
+      this.sm.transition("EXPORTING");
+      if (this.context.deck_id) {
+        this.bus.send(createMessage("orchestrator", "executor", "execute_tool", "Export PPTX", { artifacts: { node: { id: "export", tool: "export_pptx", input: { deck_id: this.context.deck_id } }, context: this.context } }));
+        await this.dispatchCycle();
       }
     }
-
-    // Phase 3: Export
-    this.sm.transition("EXPORTING");
-    if (this.context.deck_id) {
-      this.bus.send("executor", { from: "orchestrator", type: "execute", payload: { node: { id: "export", tool: "export_pptx", input: { deck_id: this.context.deck_id } }, context: this.context } });
-      await this.tick();
-      const exportResult = this.bus.receive("orchestrator");
-      this.sm.transition("DONE");
-      return { artifact: exportResult?.payload?.output, trace: this.trace };
-    }
-    this.sm.transition("FAILED");
-    return { artifact: null, trace: this.trace };
+    this.sm.transition("DONE");
+    return { artifact: this.context.last_artifact };
   }
 
-  private async tick(): Promise<void> {
-    // Process all pending messages
-    let msg = this.bus.receive("planner");
-    if (msg) await this.planner.handleMessage(msg);
-    msg = this.bus.receive("executor");
-    if (msg) await this.executor.handleMessage(msg);
-    msg = this.bus.receive("reviewer");
-    if (msg) await this.reviewer.handleMessage(msg);
-    msg = this.bus.receive("fixer");
-    if (msg) await this.fixer.handleMessage(msg);
+  private async dispatchCycle(): Promise<void> {
+    const agents: AgentType[] = ["planner", "executor", "reviewer", "fixer"];
+    for (const agent of agents) {
+      const msg = this.bus.receive(agent);
+      if (!msg) continue;
+      const validation = this.contracts.validate(agent, msg);
+      if (!validation.valid) { console.error("[Orchestrator] Contract violation:", validation.errors); continue; }
+      switch (agent) {
+        case "planner": await this.planner.handleMessage(msg); break;
+        case "reviewer": await this.reviewer.handleMessage(msg); break;
+        case "fixer": await this.fixer.handleMessage(msg); break;
+        case "executor": {
+          const { node, context } = msg.context.artifacts || {};
+          if (!node) break;
+          try {
+            const input = { ...node.input };
+            if (context?.deck_id && !input.deck_id) input.deck_id = context.deck_id;
+            const output = await this.mcpClient.call(node.tool, input);
+            if (node.tool === "create_deck" && output?.deck_id) this.context.deck_id = output.deck_id;
+            if (node.tool === "export_pptx" && output) this.context.last_artifact = output;
+            this.bus.send(createMessage("executor", "orchestrator", "execute_tool", "Executed " + node.tool, { artifacts: { output } }));
+          } catch (e: any) { console.error("[Executor] Failed:", e.message); }
+          break;
+        }
+      }
+    }
   }
 
   getStateMachine() { return this.sm; }
-  getTrace() { return this.trace; }
   getBus() { return this.bus; }
-  getContext() { return this.context; }
+  getContracts() { return this.contracts; }
 }
 

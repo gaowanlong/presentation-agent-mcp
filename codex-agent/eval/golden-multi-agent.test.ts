@@ -1,19 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { MessageBus } from "../core/message-bus.js";
+import { MessageBus, createMessage } from "../core/message-bus.js";
 import { ExecutionGraphRuntime } from "../core/execution-graph.js";
 
 describe("Golden Multi-Agent", () => {
   it("agents should communicate through bus without direct coupling", () => {
     const bus = new MessageBus();
-    bus.send("planner", { from: "orchestrator", type: "plan", payload: { text: "AI architecture report" } });
-    bus.send("executor", { from: "orchestrator", type: "execute", payload: { tool: "create_deck" } });
-    bus.send("reviewer", { from: "orchestrator", type: "review", payload: { deck: {} } });
-    bus.send("fixer", { from: "orchestrator", type: "fix", payload: { patches: [] } });
+    bus.send(createMessage("orchestrator", "planner", "build_slide_plan", "Plan", { artifacts: { text: "AI architecture report" } }));
+    bus.send(createMessage("orchestrator", "executor", "execute_tool", "Execute", { artifacts: { tool: "create_deck" } }));
+    bus.send(createMessage("orchestrator", "reviewer", "evaluate_quality", "Review", { artifacts: { deck: {} } }));
+    bus.send(createMessage("orchestrator", "fixer", "fix_issues", "Fix", { artifacts: { patches: [] } }));
     expect(bus.getHistory().length).toBe(4);
     // Verify no cross-responsibility
-    const executeMsgs = bus.getHistory().filter(m => m.type === "execute");
-    const reviewMsgs = bus.getHistory().filter(m => m.type === "review");
-    const fixMsgs = bus.getHistory().filter(m => m.type === "fix");
+    const executeMsgs = bus.getHistory().filter(m => m.intent === "execute_tool");
+    const reviewMsgs = bus.getHistory().filter(m => m.intent === "evaluate_quality");
+    const fixMsgs = bus.getHistory().filter(m => m.intent === "fix_issues");
     expect(executeMsgs.length).toBe(1);
     expect(reviewMsgs.length).toBe(1);
     expect(fixMsgs.length).toBe(1);
