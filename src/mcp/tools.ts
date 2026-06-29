@@ -123,6 +123,17 @@ const toolDefinitions: ToolDefinition[] = [
       required: ["deck_id"],
     },
   },
+  {
+    name: "auto_fix_deck",
+    description: "Auto-fix review issues in a deck",
+    inputSchema: {
+      type: "object",
+      properties: {
+        deck_id: { type: "string", description: "Deck ID" },
+      },
+      required: ["deck_id"],
+    },
+  },
 ];
 
 export function registerToolHandlers(
@@ -158,6 +169,9 @@ export function registerToolHandlers(
           return await handleUpdateSlide(runtime, args);
         case "export_pptx":
           return await handleExportPptx(runtime, args);
+        
+        case "auto_fix_deck":
+          return await handleAutoFixDeck(runtime, args);
         case "export_pdf":
           return await handleExportPdf(runtime, args);
         default:
@@ -239,5 +253,10 @@ async function handleExportPptx(runtime: PresentationRuntime, args: any) {
 
 async function handleExportPdf(runtime: PresentationRuntime, args: any) {
   const result = await runtime.exportPdf(args?.deck_id || "");
+  return { content: [textContent(JSON.stringify(result, null, 2))] };
+}
+
+async function handleAutoFixDeck(runtime: PresentationRuntime, args: any) {
+  const result = await runtime.autoFixDeck(args?.deck_id || "");
   return { content: [textContent(JSON.stringify(result, null, 2))] };
 }

@@ -7,18 +7,31 @@ import { PptxExporter } from "./export/pptx-exporter.js";
 import { PdfExporter } from "./export/pdf-exporter.js";
 import { LocalArtifactStore } from "./storage/local-artifact-store.js";
 import { RuleBasedLLMClient } from "./llm/rule-based-client.js";
+import { DeepSeekLLMClient } from "./llm/deepseek-client.js";
+import type { LLMClient } from "./llm/llm-client.js";
 import { startMcpServer } from "./mcp/server.js";
 import { startRemoteMcpServer } from "./mcp/remote-server.js";
 
 const isRemote = process.argv.includes("--remote") || process.env.REMOTE_MCP === "true";
 const port = parseInt(process.env.MCP_PORT || "3000", 10);
+const provider = process.env.LLM_PROVIDER || "rule-based";
+
+function createLLMClient(): LLMClient {
+  switch (provider) {
+    case "deepseek":
+      return new DeepSeekLLMClient();
+    case "rule-based":
+    default:
+      return new RuleBasedLLMClient();
+  }
+}
 
 async function main() {
   const store = new LocalArtifactStore();
   const layoutEngine = new LayoutEngine();
   const reviewEngine = new ReviewEngine();
   const patchEngine = new PatchEngine();
-  const llmClient = new RuleBasedLLMClient();
+  const llmClient = createLLMClient();
   const incrementalEditor = new IncrementalEditor(reviewEngine, patchEngine, llmClient);
   const pptxExporter = new PptxExporter(layoutEngine);
   const pdfExporter = new PdfExporter(layoutEngine);
@@ -28,7 +41,7 @@ async function main() {
   );
 
   if (isRemote) {
-    console.error(`Presentation Agent MCP (Remote: ${llmClient.name}) starting on port ${port}...`);
+    console.error(`Presentation Agent MCP (Remote, provider: ${llmClient.name}) starting on port ${port}...`);
     await startRemoteMcpServer(runtime, port);
   } else {
     console.error(`Presentation Agent MCP (stdio, provider: ${llmClient.name}) starting...`);

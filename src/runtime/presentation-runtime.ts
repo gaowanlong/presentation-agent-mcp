@@ -10,16 +10,19 @@ import { IncrementalEditor, UpdateSlideInput, UpdateSlideResult } from "./increm
 import { PptxExporter } from "../export/pptx-exporter.js";
 import { PdfExporter } from "../export/pdf-exporter.js";
 import { PatchEngine } from "../patch/patch-engine.js";
+import { AutoFixEngine, AutoFixResult } from "../autofix/auto-fix-engine.js";
 import type { LLMClient } from "../llm/llm-client.js";
 import { DeckPatch } from "../patch/deck-patch.schema.js";
 import { getStyleById } from "../styles/index.js";
 import { generateId } from "../utils/ids.js";
 
 export interface CreateStorylineInput { topic: string; audience?: string; purpose?: string; research_brief?: string; slide_count?: number; }
-export interface ExportResult { deck_id: string; export_id: string; file_path: string; format: string; }
+export interface ExportResult { deck_id: string; export_id: string; file_path: string; format: string; download_url?: string; }
 
 export class PresentationRuntime {
   private patchEngine: PatchEngine;
+  private autoFixEngine: AutoFixEngine;
+  private hostPort: string = "";
 
   constructor(
     private store: ArtifactStore,
@@ -30,7 +33,14 @@ export class PresentationRuntime {
     private pdfExporter?: PdfExporter
   ) {
     this.patchEngine = new PatchEngine();
+    this.autoFixEngine = new AutoFixEngine();
   }
+
+  /** Set the host:port for generating download URLs in remote mode. */
+  setHostPort(hostPort: string): void { this.hostPort = hostPort; }
+
+  getPatchEngine(): PatchEngine { return this.patchEngine; }
+  getReviewEngine(): ReviewEngine { return this.reviewEngine; }
 
   async createStyleProfile(input: { style_id?: string }): Promise<StyleProfile> {
     const parsed = CreateStyleProfileInputSchema.parse(input);
@@ -73,12 +83,19 @@ export class PresentationRuntime {
     this.patchEngine.applyPatch(deck, patch);
     await this.store.saveDeck(deck);
     await this.store.savePatch(patch);
-    const review = this.reviewEngine.review(deck);
-    return { patch, review };
+    return { patch, review: this.reviewEngine.review(deck) };
   }
 
-  async listPatches(deckId: string): Promise<DeckPatch[]> {
-    return this.store.listPatches(deckId);
+  async listPatches(deckId: string): Promise<DeckPatch[]> { return this.store.listPatches(deckId); }
+
+  async autoFixDeck(deckId: string): Promise<AutoFixResult> {
+    const deck = await this.store.loadDeck(deckId);
+    const result = this.autoFixEngine.autoFix(deck);
+    await this.store.saveDeck(deck);
+    for (const p of result.patches) {
+      await this.store.savePatch(p);
+    }
+    return result;
   }
 
   async exportPptx(deckId: string): Promise<ExportResult> {
@@ -87,7 +104,10 @@ export class PresentationRuntime {
     const exportId = generateId("export");
     const filePath = this.store.getExportPath(exportId);
     await this.store.saveExport({ export_id: exportId, deck_id: deckId, format: "pptx", file_path: filePath, created_at: new Date().toISOString() }, buffer);
-    return { deck_id: deckId, export_id: exportId, file_path: filePath, format: "pptx" };
+    return {
+      deck_id: deckId, export_id: exportId, file_path: filePath, format: "pptx",
+      download_url: this.hostPort ? `http://${this.hostPort}/artifacts/${exportId}` : undefined,
+    };
   }
 
   async exportPdf(deckId: string): Promise<ExportResult> {
@@ -97,6 +117,9 @@ export class PresentationRuntime {
     const exportId = generateId("export");
     const filePath = this.store.getExportPath(exportId).replace(".pptx", ".pdf");
     await this.store.saveExport({ export_id: exportId, deck_id: deckId, format: "pdf", file_path: filePath, created_at: new Date().toISOString() }, buffer);
-    return { deck_id: deckId, export_id: exportId, file_path: filePath, format: "pdf" };
+    return {
+      deck_id: deckId, export_id: exportId, file_path: filePath, format: "pdf",
+      download_url: this.hostPort ? `http://${this.hostPort}/artifacts/${exportId}` : undefined,
+    };
   }
 }
