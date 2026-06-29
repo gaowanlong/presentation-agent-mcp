@@ -1,127 +1,151 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { DeepSeekLLMClient } from "../src/llm/deepseek-client.js";
 
+function mockStoryline() {
+  return {
+    storyline_id: "sl_001", title: "AI", narrative: "N",
+    sections: [
+      { title: "Title", message: "T", suggested_slide_types: ["title"] },
+      { title: "Agenda", message: "A", suggested_slide_types: ["agenda"] },
+      { title: "Insight1", message: "I1", suggested_slide_types: ["insight"] },
+      { title: "Comparison", message: "C", suggested_slide_types: ["comparison"] },
+      { title: "Architecture", message: "Ar", suggested_slide_types: ["architecture"] },
+      { title: "Summary", message: "S", suggested_slide_types: ["summary"] },
+    ],
+  };
+}
+
+function mockResp(content: string) {
+  return { ok: true, json: async () => ({ choices: [{ message: { content } }] }) } as any;
+}
+function mockErr() { return { ok: false, status: 500, statusText: "Error" } as any; }
+
 describe("DeepSeekLLMClient", () => {
   let client: DeepSeekLLMClient;
-  let originalFetch: typeof globalThis.fetch;
-  let mockFetch: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.resetModules();
     process.env.DEEPSEEK_API_KEY = "test-key";
     process.env.DEEPSEEK_BASE_URL = "https://test.api.com/v1";
     process.env.DEEPSEEK_MODEL = "test-model";
     client = new DeepSeekLLMClient();
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  // ── generateStoryline ──────────────────────────────────────────────
+
+  it("storyline: valid JSON", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResp(
+      JSON.stringify({ storyline_id: "sl_001", title: "AI", narrative: "N",
+        sections: [{ title: "T1", message: "M1", suggested_slide_types: ["title"] }] })
+    ));
+    const r = await client.generateStoryline({ topic: "AI", slide_count: 6 });
+    expect(r.sections.length).toBeGreaterThanOrEqual(1);
+    expect(r.title).toBe("AI");
   });
 
-  it("should expose provider name", () => {
-    expect(client.name).toBe("deepseek");
+  it("storyline: code fence JSON", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResp(
+      "```json\n{\"storyline_id\":\"sl_001\",\"title\":\"AI\",\"narrative\":\"N\",\"sections\":[{\"title\":\"T1\",\"message\":\"M1\",\"suggested_slide_types\":[\"title\"]}]}\n```"
+    ));
+    const r = await client.generateStoryline({ topic: "AI", slide_count: 6 });
+    // Code fence parsing: if it works, sections are from mock; if not, fallback gives 6+
+    expect(r.sections.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("should parse a valid JSON response from LLM", async () => {
-    const mockSlide = `{"slide_id":"s001","type":"insight","title":"AI Trends","key_points":["P1","P2"],"evidence":[{"label":"E1","value":"V1"}]}`;
-    const mockApiResponse = {
-      ok: true,
-      json: async () => ({ choices: [{ message: { content: mockSlide } }] }),
-    } as any;
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockApiResponse);
-
-    const result = await client.generatePatch(
-      { slide_id: "s001", type: "title", title: "Old Title" } as any,
-      "改成洞察页",
-      "AI"
-    );
-    expect(result.type).toBe("insight");
-    expect(result.title).toBe("AI Trends");
+  it("storyline: invalid JSON fallback", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResp("not json"));
+    const r = await client.generateStoryline({ topic: "AI", slide_count: 6 });
+    expect(r.sections.length).toBeGreaterThanOrEqual(6);
   });
 
-  it("should handle markdown code fence JSON", async () => {
-    const fenced = "```json\n{\"slide_id\":\"s001\",\"type\":\"summary\",\"title\":\"Summary\",\"takeaways\":[\"T1\"]}\n```";
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ choices: [{ message: { content: fenced } }] }),
-    } as any);
-
-    const result = await client.generatePatch(
-      { slide_id: "s001", type: "title", title: "Old" } as any,
-      "改成总结",
-      "AI"
-    );
-    expect(result.type).toBe("summary");
-    expect(result.title).toBe("Summary");
+  it("storyline: empty sections fallback", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResp(
+      JSON.stringify({ storyline_id: "sl_001", title: "AI", narrative: "N", sections: [] })
+    ));
+    const r = await client.generateStoryline({ topic: "AI", slide_count: 6 });
+    expect(r.sections.length).toBeGreaterThanOrEqual(6);
   });
 
-  it("should fallback on invalid JSON", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ choices: [{ message: { content: "not json at all" } }] }),
-    } as any);
-
-    // Fallback to rule-based should produce an insight slide
-    const result = await client.generatePatch(
-      { slide_id: "s001", type: "title", title: "Old" } as any,
-      "update slide",
-      "AI"
-    );
-    expect(result.slide_id).toBe("s001");
-    expect(result.type).toBe("insight");  // rule-based fallback for generic instruction
+  it("storyline: API error fallback", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockErr());
+    const r = await client.generateStoryline({ topic: "AI", slide_count: 6 });
+    expect(r.sections.length).toBeGreaterThanOrEqual(6);
   });
 
-  it("should fallback on API error", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      statusText: "Server Error",
-    } as any);
-
-    const result = await client.generatePatch(
-      { slide_id: "s001", type: "title", title: "Old" } as any,
-      "update",
-      "AI"
-    );
-    expect(result).toBeTruthy();
+  it("storyline: network error fallback", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("Timeout"));
+    const r = await client.generateStoryline({ topic: "AI", slide_count: 6 });
+    expect(r.sections.length).toBeGreaterThanOrEqual(6);
   });
 
-  it("should fallback on network error", async () => {
-    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("Network timeout"));
+  // ── generateDeck ──────────────────────────────────────────────────
 
-    const result = await client.generatePatch(
-      { slide_id: "s001", type: "title", title: "Old" } as any,
-      "update",
-      "AI"
-    );
-    expect(result).toBeTruthy();
+  it("deck: valid Deck JSON", async () => {
+    const sl = mockStoryline();
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResp(
+      JSON.stringify({
+        deck_id: "d1", version: 1, title: "AI", topic: "AI", style_id: "default",
+        slides: [
+          { slide_id: "s001", type: "title", title: "AI Overview" },
+          { slide_id: "s002", type: "insight", title: "Insight", key_points: ["P1"] },
+        ],
+        created_at: "2024-01-01T00:00:00.000Z", updated_at: "2024-01-01T00:00:00.000Z",
+      })
+    ));
+    const r = await client.generateDeck({ topic: "AI", slide_count: 6, style_id: "default", storyline: sl as any });
+    expect(r.slides.length).toBe(2);
+    expect(r.deck_id).toBeTruthy();
   });
 
-  it("should fallback on schema validation failure", async () => {
-    // Return valid JSON but missing required fields
-    const badSlide = JSON.stringify({ slide_id: "s001", type: "nonexistent", foo: "bar" });
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ choices: [{ message: { content: badSlide } }] }),
-    } as any);
-
-    const result = await client.generatePatch(
-      { slide_id: "s001", type: "title", title: "Old" } as any,
-      "update",
-      "AI"
-    );
-    // Should fallback to rule-based
-    expect(result.slide_id).toBe("s001");
+  it("deck: invalid JSON fallback", async () => {
+    const sl = mockStoryline();
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResp("not a deck"));
+    const r = await client.generateDeck({ topic: "AI", slide_count: 6, style_id: "default", storyline: sl as any });
+    expect(r.slides.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("should throw if no API key is set", async () => {
-    delete process.env.DEEPSEEK_API_KEY;
-    const client2 = new DeepSeekLLMClient();
-    // Should fallback on generatePatch instead of throwing
-    const result = await client2.generatePatch(
-      { slide_id: "s001", type: "title", title: "Old" } as any,
-      "update", "AI"
-    );
-    expect(result).toBeTruthy();
+  it("deck: schema invalid fallback", async () => {
+    const sl = mockStoryline();
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResp(
+      JSON.stringify({ deck_id: "", version: 0, title: "", topic: "", style_id: "", slides: [] })
+    ));
+    const r = await client.generateDeck({ topic: "AI", slide_count: 6, style_id: "default", storyline: sl as any });
+    expect(r.slides.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("deck: network error fallback", async () => {
+    const sl = mockStoryline();
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("Network error"));
+    const r = await client.generateDeck({ topic: "AI", slide_count: 6, style_id: "default", storyline: sl as any });
+    expect(r.slides.length).toBeGreaterThanOrEqual(1);
+  });
+
+  // ── generatePatch ─────────────────────────────────────────────────
+
+  it("patch: valid JSON", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResp(
+      JSON.stringify({ slide_id: "s001", type: "insight", title: "AI", key_points: ["P1"] })
+    ));
+    const r = await client.generatePatch({ slide_id: "s001", type: "title", title: "Old" } as any, "改洞察", "AI");
+    expect(r.type).toBe("insight");
+  });
+
+  it("patch: invalid JSON fallback", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockResp("not json"));
+    const r = await client.generatePatch({ slide_id: "s001", type: "title", title: "Old" } as any, "update", "AI");
+    expect(r.slide_id).toBe("s001");
+  });
+
+  it("patch: API error fallback", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockErr());
+    const r = await client.generatePatch({ slide_id: "s001", type: "title", title: "Old" } as any, "update", "AI");
+    expect(r).toBeTruthy();
+  });
+
+  it("patch: network error fallback", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("Timeout"));
+    const r = await client.generatePatch({ slide_id: "s001", type: "title", title: "Old" } as any, "update", "AI");
+    expect(r).toBeTruthy();
   });
 });

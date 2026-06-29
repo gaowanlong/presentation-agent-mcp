@@ -1,0 +1,18 @@
+{
+  "name": "AgentOS Kernel Architecture",
+  "topic": "Agentic AI 时代端侧 OS 架构演进",
+  "audience": "操作系统架构师和技术管理层",
+  "purpose": "说明端侧负载变化，并提出 AgentOS Kernel 架构演进方向",
+  "research_brief_file": "/Users/allen/Downloads/Agentic AI时代端侧负载变化与操作系统内核演进报告.md",
+  "slide_count": 8,
+  "style_id": "allen_huawei_tech",
+  "metrics": {
+    "required_slide_types": ["architecture", "summary", "comparison"],
+    "required_keywords": ["Agent", "OS", "调度", "架构"],
+    "min_review_score_before_autofix": 0,
+    "min_review_score_after_autofix": 60,
+    "max_duplicate_titles": 1,
+    "has_architecture_slide": true,
+    "has_summary_slide": true
+  }
+}

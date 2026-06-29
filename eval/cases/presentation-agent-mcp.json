@@ -1,0 +1,17 @@
+{
+  "name": "Presentation Agent MCP",
+  "topic": "Presentation Agent MCP — MCP Server for PPT Generation",
+  "audience": "Developers and Architects",
+  "purpose": "演示 Presentation Agent MCP 的能力",
+  "slide_count": 8,
+  "style_id": "default",
+  "metrics": {
+    "required_slide_types": ["architecture", "summary", "comparison"],
+    "required_keywords": ["MCP", "Deck", "JSON", "Layout"],
+    "min_review_score_before_autofix": 0,
+    "min_review_score_after_autofix": 60,
+    "max_duplicate_titles": 2,
+    "has_architecture_slide": true,
+    "has_summary_slide": true
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "KV Cache Memory Management",
+  "topic": "端侧 LLM KV Cache 内存管理优化方案",
+  "audience": "内核开发工程师",
+  "purpose": "分析端侧 LLM 推理中 KV Cache 的内存瓶颈并提出优化方案",
+  "slide_count": 6,
+  "style_id": "default",
+  "metrics": {
+    "required_slide_types": ["architecture", "summary"],
+    "required_keywords": ["KV", "Cache", "内存", "优化"],
+    "min_review_score_before_autofix": 0,
+    "min_review_score_after_autofix": 60,
+    "max_duplicate_titles": 1,
+    "has_architecture_slide": true,
+    "has_summary_slide": true
+  }
+}
