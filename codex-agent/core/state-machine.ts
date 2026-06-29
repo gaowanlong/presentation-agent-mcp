@@ -1,26 +1,20 @@
 import { AgentState } from "../types/agent-state.js";
-const TRANSITIONS: Record<AgentState, AgentState[]> = {
-  "INIT": ["PARSED", "EXECUTING"],
-  "PARSED": ["PLANNED"],
-  "PLANNED": ["EXECUTING"],
-  "EXECUTING": ["REPLANNING", "MUTATING_GRAPH", "REVIEWING", "FIXING", "EXPORTING", "DONE", "FAILED"],
-  "REPLANNING": ["EXECUTING", "FAILED"],
-  "MUTATING_GRAPH": ["EXECUTING", "FAILED"],
+const T: Record<AgentState, AgentState[]> = {
+  "INIT": ["PLANNING"],
+  "PLANNING": ["EXECUTING", "FAILED"],
+  "EXECUTING": ["REVIEWING", "EXPORTING", "FAILED"],
   "REVIEWING": ["FIXING", "EXPORTING", "REPLANNING", "FAILED"],
-  "FIXING": ["REVIEWING", "FAILED"],
+  "FIXING": ["EXECUTING", "REPLANNING", "FAILED"],
+  "REPLANNING": ["EXECUTING", "FAILED"],
   "EXPORTING": ["DONE", "FAILED"],
-  "DONE": [],
-  "FAILED": [],
+  "DONE": [], "FAILED": [],
 };
 export class StateMachine {
-  private state: AgentState = "INIT"; private history: AgentState[] = ["INIT"];
-  getState(): AgentState { return this.state; }
-  canTransition(to: AgentState): boolean { return TRANSITIONS[this.state]?.includes(to) ?? false; }
-  transition(to: AgentState): void {
-    if (!this.canTransition(to)) throw new Error("Invalid transition: " + this.state + " -> " + to);
-    this.state = to; this.history.push(to);
-  }
-  getHistory(): AgentState[] { return [...this.history]; }
-  reset() { this.state = "INIT"; this.history = ["INIT"]; }
+  private state: AgentState = "INIT"; private h: AgentState[] = ["INIT"];
+  getState() { return this.state; }
+  canTransition(to: AgentState) { return T[this.state]?.includes(to) ?? false; }
+  transition(to: AgentState) { if (!this.canTransition(to)) throw new Error("Invalid: " + this.state + " -> " + to); this.state = to; this.h.push(to); }
+  getHistory() { return [...this.h]; }
+  reset() { this.state = "INIT"; this.h = ["INIT"]; }
 }
 

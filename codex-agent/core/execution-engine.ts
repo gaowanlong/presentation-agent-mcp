@@ -22,6 +22,7 @@ export class ExecutionEngine {
   constructor(private context: ContextStore, private trace: TraceWriter) {}
 
   async run(plan: ExecutionPlan, client: MCPClient): Promise<ExecutionTraceGraph> {
+    this.sm.transition("PLANNING");
     this.sm.transition("EXECUTING");
     this.graphRuntime = new ExecutionGraphRuntime(plan);
     this.stateMgr.init(plan.steps);
@@ -99,6 +100,7 @@ export class ExecutionEngine {
       }
     }
 
+    this.sm.transition("EXPORTING");
     this.sm.transition("DONE");
     return { nodes, edges };
   }
