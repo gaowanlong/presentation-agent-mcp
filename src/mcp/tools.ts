@@ -22,7 +22,7 @@ interface ToolDefinition {
 const toolDefinitions: ToolDefinition[] = [
   {
     name: "create_style_profile",
-    description: "获取内置风格配置",
+    description: "Get a configured style profile. Defaults to allen_huawei_tech.",
     inputSchema: {
       type: "object",
       properties: {
@@ -37,7 +37,7 @@ const toolDefinitions: ToolDefinition[] = [
   },
   {
     name: "create_storyline",
-    description: "根据主题、受众、研究摘要生成故事线",
+    description: "Generate a structured storyline for presentation planning. Call before create_deck when you need narrative structure.",
     inputSchema: {
       type: "object",
       properties: {
@@ -52,7 +52,7 @@ const toolDefinitions: ToolDefinition[] = [
   },
   {
     name: "create_deck",
-    description: "根据主题或 storyline 创建 Deck JSON",
+    description: "Create a complete presentation deck. Use after create_storyline or with a clear topic and purpose.",
     inputSchema: {
       type: "object",
       properties: {
@@ -68,7 +68,7 @@ const toolDefinitions: ToolDefinition[] = [
   },
   {
     name: "get_deck",
-    description: "读取 Deck JSON",
+    description: "Read the full Deck JSON for editing or inspection.",
     inputSchema: {
       type: "object",
       properties: {
@@ -79,7 +79,7 @@ const toolDefinitions: ToolDefinition[] = [
   },
   {
     name: "review_deck",
-    description: "审查 PPT 内容结构",
+    description: "Review a deck for content quality issues. Recommended after create_deck, update_slide, or auto_fix_deck.",
     inputSchema: {
       type: "object",
       properties: {
@@ -90,7 +90,7 @@ const toolDefinitions: ToolDefinition[] = [
   },
   {
     name: "update_slide",
-    description: "增量修改单页",
+    description: "Edit a single slide by natural language instruction. Returns a DeckPatch with version history.",
     inputSchema: {
       type: "object",
       properties: {
@@ -103,7 +103,7 @@ const toolDefinitions: ToolDefinition[] = [
   },
   {
     name: "export_pptx",
-    description: "导出 PPTX",
+    description: "Export the deck as a downloadable .pptx file. Returns artifact metadata and download URL.",
     inputSchema: {
       type: "object",
       properties: {
@@ -114,7 +114,7 @@ const toolDefinitions: ToolDefinition[] = [
   },
   {
     name: "export_pdf",
-    description: "导出 PDF",
+    description: "Export the deck as a lightweight PDF file. Note: PDF uses basic positioning, not full PPT visual fidelity.",
     inputSchema: {
       type: "object",
       properties: {
@@ -125,7 +125,7 @@ const toolDefinitions: ToolDefinition[] = [
   },
   {
     name: "auto_fix_deck",
-    description: "Auto-fix review issues in a deck",
+    description: "Automatically fix all fixable review issues (weak titles, generic messages, too many bullets, etc.). Use after review_deck.",
     inputSchema: {
       type: "object",
       properties: {

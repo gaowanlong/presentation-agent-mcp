@@ -14,10 +14,11 @@ import { AutoFixEngine, AutoFixResult } from "../autofix/auto-fix-engine.js";
 import type { LLMClient } from "../llm/llm-client.js";
 import { DeckPatch } from "../patch/deck-patch.schema.js";
 import { getStyleById } from "../styles/index.js";
+import { ArtifactService } from "../artifact/artifact-service.js";
 import { generateId } from "../utils/ids.js";
 
 export interface CreateStorylineInput { topic: string; audience?: string; purpose?: string; research_brief?: string; slide_count?: number; }
-export interface ExportResult { deck_id: string; export_id: string; file_path: string; format: string; download_url?: string; }
+export interface ExportResult { deck_id: string; export_id: string; file_path: string; format: string; mime_type?: string; size_bytes?: number; download_url?: string; }
 
 export class PresentationRuntime {
   private patchEngine: PatchEngine;
@@ -30,7 +31,8 @@ export class PresentationRuntime {
     private reviewEngine: ReviewEngine,
     private incrementalEditor: IncrementalEditor,
     private pptxExporter: PptxExporter,
-    private pdfExporter?: PdfExporter
+    private pdfExporter?: PdfExporter,
+    private artifactService?: ArtifactService
   ) {
     this.patchEngine = new PatchEngine();
     this.autoFixEngine = new AutoFixEngine();
@@ -101,25 +103,27 @@ export class PresentationRuntime {
   async exportPptx(deckId: string): Promise<ExportResult> {
     const deck = await this.store.loadDeck(deckId);
     const buffer = await this.pptxExporter.export(deck);
+    if (this.artifactService) {
+      const a = await this.artifactService.createArtifact(deckId, "pptx", buffer, this.hostPort || undefined);
+      return { deck_id: deckId, export_id: a.artifact_id, file_path: a.file_path, format: a.format, mime_type: a.mime_type, size_bytes: a.size_bytes, download_url: a.download_url };
+    }
     const exportId = generateId("export");
-    const filePath = this.store.getExportPath(exportId);
-    await this.store.saveExport({ export_id: exportId, deck_id: deckId, format: "pptx", file_path: filePath, created_at: new Date().toISOString() }, buffer);
-    return {
-      deck_id: deckId, export_id: exportId, file_path: filePath, format: "pptx",
-      download_url: this.hostPort ? `http://${this.hostPort}/artifacts/${exportId}` : undefined,
-    };
+    const fp = this.store.getExportPath(exportId);
+    await this.store.saveExport({ export_id: exportId, deck_id: deckId, format: "pptx", file_path: fp, created_at: new Date().toISOString() }, buffer);
+    return { deck_id: deckId, export_id: exportId, file_path: fp, format: "pptx", download_url: this.hostPort ? `http://${this.hostPort}/artifacts/${exportId}` : undefined };
   }
 
   async exportPdf(deckId: string): Promise<ExportResult> {
     if (!this.pdfExporter) throw new Error("PDF exporter not configured");
     const deck = await this.store.loadDeck(deckId);
     const buffer = await this.pdfExporter.export(deck);
+    if (this.artifactService) {
+      const a = await this.artifactService.createArtifact(deckId, "pdf", buffer, this.hostPort || undefined);
+      return { deck_id: deckId, export_id: a.artifact_id, file_path: a.file_path, format: a.format, mime_type: a.mime_type, size_bytes: a.size_bytes, download_url: a.download_url };
+    }
     const exportId = generateId("export");
-    const filePath = this.store.getExportPath(exportId).replace(".pptx", ".pdf");
-    await this.store.saveExport({ export_id: exportId, deck_id: deckId, format: "pdf", file_path: filePath, created_at: new Date().toISOString() }, buffer);
-    return {
-      deck_id: deckId, export_id: exportId, file_path: filePath, format: "pdf",
-      download_url: this.hostPort ? `http://${this.hostPort}/artifacts/${exportId}` : undefined,
-    };
+    const fp = this.store.getExportPath(exportId).replace(".pptx", ".pdf");
+    await this.store.saveExport({ export_id: exportId, deck_id: deckId, format: "pdf", file_path: fp, created_at: new Date().toISOString() }, buffer);
+    return { deck_id: deckId, export_id: exportId, file_path: fp, format: "pdf", download_url: this.hostPort ? `http://${this.hostPort}/artifacts/${exportId}` : undefined };
   }
 }

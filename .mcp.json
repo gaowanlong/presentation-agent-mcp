@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "presentation-agent": {
+      "description": "Presentation Agent — generate and export PPT/PDF presentations",
+      "url": "http://localhost:3000/sse"
+    }
+  }
+}

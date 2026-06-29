@@ -25,7 +25,7 @@ export async function startRemoteMcpServer(
   port: number = 3000
 ): Promise<void> {
   const server = new Server(
-    { name: "presentation-agent-mcp", version: "0.1.0" },
+    { name: "presentation-agent-mcp", version: "0.6.0" },
     { capabilities: { tools: {} } }
   );
 
@@ -75,7 +75,7 @@ export async function startRemoteMcpServer(
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({
         status: "ok",
-        version: "0.4.0",
+        version: "0.6.0",
         provider: "presentation-agent-mcp",
         remote: true,
       }));
@@ -133,6 +133,7 @@ export async function startRemoteMcpServer(
           const parsed = JSON.parse(body);
           if (transport.onmessage) {
             transport.onmessage(parsed);
+            console.error("[Remote] POST:", parsed.method || "unknown");
           }
           res.writeHead(202, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ ok: true, queued: true }));
