@@ -26,7 +26,7 @@ export function generateDeck(input: DeckGeneratorInput): Deck {
 
   // ── Sentence pool: split research_brief into unique sentences ──
   const pool = research_brief
-    ? [...new Set(research_brief.split(/[。！\n]/).map(s => s.trim()).filter(s => s.length > 15))]
+    ? [...new Set(research_brief.split(/[。！\n]/).map(s => s.trim()).filter(s => s.length > 15 && !s.startsWith("#") && !s.startsWith("[") && !s.startsWith("```") && !s.includes("cite")))]
     : [];
   const archText = research_brief || "";
   const insCount = storyline.sections.filter(s => s.suggested_slide_types[0] === "insight").length;
@@ -65,7 +65,7 @@ function createInsightSlide(section: StorylineSection, topic: string, sentences:
   return {
     slide_id: sid, type: "insight", title: assertionTitle(section),
     message: section.message || sentences[0]?.substring(0, 80) || `关于 ${topic} 的技术洞察`,
-    key_points: sentences.slice(0, 4).map(s => s.substring(0, 100)),
+    key_points: sentences.slice(0, 10).map(s => s.substring(0, 120)),
     evidence: [
       { label: evNames[idx % evNames.length], value: evVals[idx % evVals.length], description: sentences[idx % sentences.length]?.substring(0, 50) || "" },
     ],
