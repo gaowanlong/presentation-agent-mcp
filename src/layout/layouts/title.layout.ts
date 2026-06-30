@@ -26,17 +26,7 @@ export function layoutTitleSlide(
     })
   );
 
-  // Top accent line
-  elements.push(
-    shapeElement({
-      x: 0,
-      y: 0.1,
-      w: canvasWidth(style),
-      h: 0.06,
-      shape: "rect",
-      fill: style.colors.primary,
-    })
-  );
+  
 
   // Title
   elements.push(
