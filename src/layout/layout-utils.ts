@@ -100,28 +100,18 @@ export function buildPageHeader(
   style: StyleProfile,
   title: string
 ) {
-  const bg = shapeElement({
-    x: 0,
-    y: 0,
-    w: canvasWidth(style),
-    h: TITLE_BAR_HEIGHT,
-    shape: "rect",
-    fill: style.colors.primary,
-  });
-
   const titleEl = textElement({
     text: title,
     x: CANVAS_MARGIN_X,
-    y: 0.15,
+    y: 0.2,
     w: contentWidth(style),
-    h: 0.6,
+    h: 0.65,
     role: "title",
     font_size: style.typography.title_size,
     bold: true,
-    color: "FFFFFF",
+    color: style.colors.primary,
   });
-
-  return [bg, titleEl];
+  return [titleEl];
 }
 
 export function buildPageNumber(

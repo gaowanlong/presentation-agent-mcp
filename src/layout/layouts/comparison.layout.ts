@@ -60,7 +60,7 @@ export function layoutComparisonSlide(
       role: "subtitle",
       font_size: style.typography.subtitle_size,
       bold: true,
-      color: style.colors.secondary,
+      color: style.colors.text,
     })
   );
 
@@ -118,7 +118,7 @@ export function layoutComparisonSlide(
       role: "subtitle",
       font_size: style.typography.subtitle_size,
       bold: true,
-      color: style.colors.primary,
+      color: style.colors.text,
     })
   );
 

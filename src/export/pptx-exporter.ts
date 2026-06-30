@@ -127,7 +127,8 @@ export class PptxExporter {
       w: el.w,
       h: el.h,
       fill: { color: pptxColor(style.colors.card_background) },
-      line: { color: pptxColor(style.colors.border), width: 0.5 },
+      card_border: pptxColor(style.colors.card_border),
+      line: { color: pptxColor(style.colors.card_border), width: 0.5 },
       rectRadius: 0.1,
     };
 

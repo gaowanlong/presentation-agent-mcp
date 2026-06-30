@@ -61,7 +61,7 @@ export function layoutArchitectureSlide(
         h: layerH,
         shape: "roundRect",
         fill: color + "18",
-        stroke: color,
+        stroke: style.colors.card_border,
       })
     );
 

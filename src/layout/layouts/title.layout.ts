@@ -39,7 +39,7 @@ export function layoutTitleSlide(
       role: "title",
       font_size: 36,
       bold: true,
-      color: style.colors.text,
+      color: style.colors.primary,
     })
   );
 

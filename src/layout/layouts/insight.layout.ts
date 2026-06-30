@@ -47,7 +47,7 @@ export function layoutInsightSlide(
       role: "label",
       font_size: 14,
       bold: true,
-      color: style.colors.secondary,
+      color: style.colors.text,
     })
   );
 
@@ -89,6 +89,17 @@ export function layoutInsightSlide(
   for (let i = 0; i < maxEvidence; i++) {
     const ev = evidenceItems[i];
     const y = startY + 0.5 + i * 1.1;
+    // Card title bar background
+    elements.push(
+      shapeElement({
+        x: rightX,
+        y,
+        w: colW,
+        h: 0.35,
+        shape: "rect",
+        fill: style.colors.card_title_background,
+      })
+    );
     elements.push(
       shapeElement({
         x: rightX,
@@ -97,7 +108,7 @@ export function layoutInsightSlide(
         h: 0.9,
         shape: "roundRect",
         fill: style.colors.card_background,
-        stroke: style.colors.border,
+        stroke: style.colors.card_border,
       })
     );
     elements.push(
