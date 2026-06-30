@@ -61,7 +61,7 @@ export function layoutSummarySlide(
         y: startY,
         w: cardW,
         h: cardH,
-        shape: "roundRect",
+        shape: "rect",
         fill: style.colors.card_background,
         stroke: style.colors.border,
       })

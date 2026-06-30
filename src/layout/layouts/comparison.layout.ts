@@ -43,7 +43,7 @@ export function layoutComparisonSlide(
       y: startY,
       w: colW,
       h: colH,
-      shape: "roundRect",
+      shape: "rect",
       fill: style.colors.card_background,
       stroke: style.colors.border,
     })
@@ -101,7 +101,7 @@ export function layoutComparisonSlide(
       y: startY,
       w: colW,
       h: colH,
-      shape: "roundRect",
+      shape: "rect",
       fill: style.colors.card_background,
       stroke: style.colors.primary,
     })
@@ -161,7 +161,7 @@ export function layoutComparisonSlide(
         y: concY,
         w: contentWidth(style),
         h: 0.5,
-        shape: "roundRect",
+        shape: "rect",
         fill: style.colors.card_background,
       })
     );

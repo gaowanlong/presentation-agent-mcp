@@ -19,7 +19,7 @@ export function layoutRoadmapSlide(slide: RoadmapSlide, style: StyleProfile): La
     const p = phases[i];
     const x = CANVAS_MARGIN_X + i * (cardW + 0.15);
 
-    elements.push(shapeElement({ x, y: startY, w: cardW, h: cardH, shape: "roundRect", fill: style.colors.card_background, stroke: style.colors.border }));
+    elements.push(shapeElement({ x, y: startY, w: cardW, h: cardH, shape: "rect", fill: style.colors.card_background, stroke: style.colors.border }));
 
     // Status indicator
     const statusColors: Record<string, string> = { completed: "2ECC71", in_progress: "F39C12", planned: style.colors.border };

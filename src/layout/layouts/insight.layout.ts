@@ -80,7 +80,7 @@ export function layoutInsightSlide(
       role: "label",
       font_size: 14,
       bold: true,
-      color: style.colors.secondary,
+      color: style.colors.text,
     })
   );
 
@@ -105,8 +105,8 @@ export function layoutInsightSlide(
         x: rightX,
         y,
         w: colW,
-        h: 0.9,
-        shape: "roundRect",
+        h: 0.95,
+        shape: "rect",
         fill: style.colors.card_background,
         stroke: style.colors.card_border,
       })
@@ -121,7 +121,7 @@ export function layoutInsightSlide(
         role: "label",
         font_size: style.typography.caption_size + 1,
         bold: true,
-        color: style.colors.secondary,
+        color: style.colors.text,
       })
     );
     if (ev.value) {
@@ -129,7 +129,7 @@ export function layoutInsightSlide(
         textElement({
           text: ev.value,
           x: rightX + 0.15,
-          y: y + 0.3,
+          y: y + 0.4,
           w: colW - 0.3,
           h: 0.25,
           role: "body",
@@ -144,7 +144,7 @@ export function layoutInsightSlide(
         textElement({
           text: ev.description,
           x: rightX + 0.15,
-          y: y + 0.55,
+          y: y + 0.68,
           w: colW - 0.3,
           h: 0.25,
           role: "caption",
