@@ -20,6 +20,21 @@ export const SourceRefSchema = z.object({
 });
 export type SourceRef = z.infer<typeof SourceRefSchema>;
 
+
+export const RichTextRunSchema = z.object({ text: z.string().min(1), emphasis: z.boolean().optional(), bold: z.boolean().optional() });
+export const RichTextSchema = z.array(RichTextRunSchema).min(1);
+export type RichTextRun = z.infer<typeof RichTextRunSchema>;
+export type RichText = z.infer<typeof RichTextSchema>;
+
+export const ContentCardSchema = z.object({ id: z.string().min(1), title: z.string().min(1), body: z.array(RichTextRunSchema).min(1) });
+export type ContentCard = z.infer<typeof ContentCardSchema>;
+
+export const DiagramNodeSchema = z.object({ id: z.string().min(1), label: z.string().min(1), group: z.string().optional(), description: z.string().optional() });
+export const DiagramEdgeSchema = z.object({ from: z.string().min(1), to: z.string().min(1), relation: z.string().optional() });
+export const SlideDiagramSchema = z.object({ nodes: z.array(DiagramNodeSchema).min(1), edges: z.array(DiagramEdgeSchema), direction: z.enum(["left-right", "top-down", "layered"]).optional() });
+export type SlideDiagram = z.infer<typeof SlideDiagramSchema>;
+export const LayoutVariantEnum = z.enum(["architecture_with_notes", "key_technology_quadrants"]);
+
 export const BaseSlideSchema = z.object({
   slide_id: z.string().min(1),
   type: SlideTypeEnum,
@@ -27,6 +42,7 @@ export const BaseSlideSchema = z.object({
   message: z.string().optional(),
   speaker_note: z.string().optional(),
   sources: z.array(SourceRefSchema).optional(),
+  layout_variant: LayoutVariantEnum.optional(),
 });
 
 export const TitleSlideSchema = BaseSlideSchema.extend({
@@ -75,6 +91,7 @@ export const ArchitectureSlideSchema = BaseSlideSchema.extend({
     components: z.array(z.string()),
   })),
   callouts: z.array(z.object({ target: z.string(), text: z.string() })).optional(),
+  architecture_content: z.object({ diagram: SlideDiagramSchema, key_technologies: z.array(ContentCardSchema).min(3).max(4) }).optional(),
 });
 export type ArchitectureSlide = z.infer<typeof ArchitectureSlideSchema>;
 

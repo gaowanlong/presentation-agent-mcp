@@ -13,20 +13,26 @@ export const StyleProfileSchema = z.object({
 
   typography: z.object({
     font_face: z.string(),
+    cover_title_size: z.number().positive(),
     title_size: z.number().positive(),
     subtitle_size: z.number().positive(),
     body_size: z.number().positive(),
+    min_body_size: z.number().positive(),
     caption_size: z.number().positive(),
   }),
 
   colors: z.object({
     background: z.string(),
     primary: z.string(),
+    emphasis: z.string(),
     secondary: z.string(),
     accent: z.string(),
     text: z.string(),
     muted_text: z.string(),
     border: z.string(),
+    card_border: z.string(),
+    card_title_background: z.string(),
+    card_title_text: z.string(),
     card_background: z.string(),
   }),
 

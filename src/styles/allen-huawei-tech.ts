@@ -13,21 +13,27 @@ export const allenHuaweiTechStyle: StyleProfile = {
   },
 
   typography: {
-    font_face: "Arial",
-    title_size: 28,
+    font_face: "Microsoft YaHei",
+    cover_title_size: 36,
+    title_size: 24,
     subtitle_size: 18,
-    body_size: 16,
-    caption_size: 11,
+    body_size: 14,
+    min_body_size: 12,
+    caption_size: 12,
   },
 
   colors: {
-    background: "F7F9FC",
+    background: "FFFFFF",
     primary: "A80000",
     secondary: "1F4E79",
     accent: "0070C0",
+    emphasis: "0000FF",
     text: "1F2937",
     muted_text: "6B7280",
-    border: "D9E2EC",
+    border: "D9D9D9",
+    card_border: "D9D9D9",
+    card_title_background: "CCECFF",
+    card_title_text: "1F2937",
     card_background: "FFFFFF",
   },
 

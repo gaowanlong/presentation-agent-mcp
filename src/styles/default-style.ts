@@ -13,9 +13,11 @@ export const defaultStyle: StyleProfile = {
 
   typography: {
     font_face: "Arial",
+    cover_title_size: 36,
     title_size: 28,
     subtitle_size: 18,
     body_size: 16,
+    min_body_size: 12,
     caption_size: 11,
   },
 
@@ -24,9 +26,13 @@ export const defaultStyle: StyleProfile = {
     primary: "1F4E79",
     secondary: "2E75B6",
     accent: "4472C4",
+    emphasis: "0000FF",
     text: "333333",
     muted_text: "888888",
     border: "D9E2EC",
+    card_border: "D9D9D9",
+    card_title_background: "CCECFF",
+    card_title_text: "1F2937",
     card_background: "F5F7FA",
   },
 
